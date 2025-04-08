@@ -1,0 +1,219 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and profile management
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  username      String         @unique
+  password      String
+  name          String
+  bio           String?
+  avatar        String?
+  role          String         @default("USER") // USER, ADMIN
+  plan          String         @default("FREE") // FREE, PREMIUM
+  githubId      String?
+  googleId      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordReset[]
+  projects       Project[]
+  apiUsage       ApiUsage[]
+  payments       Payment[]
+  subscriptions  Subscription[]
+  apiKeys        ApiKey[]
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([plan])
+}
+
+// Refresh token for JWT authentication
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Password reset tokens
+model PasswordReset {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Projects for organizing code snippets
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  language    String?
+  framework   String?
+  userId      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snippets    CodeSnippet[]
+  share       ProjectShare?
+
+  @@index([userId])
+  @@index([language])
+  @@index([framework])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Code snippets within projects
+model CodeSnippet {
+  id          String   @id @default(uuid())
+  title       String
+  code        String   @db.Text
+  language    String
+  description String?
+  projectId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([language])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Project sharing settings
+model ProjectShare {
+  id        String    @id @default(uuid())
+  projectId String    @unique
+  token     String    @unique
+  isPublic  Boolean   @default(false)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([isPublic])
+  @@index([expiresAt])
+}
+
+// Subscription records
+model Subscription {
+  id         String    @id @default(uuid())
+  userId     String
+  plan       String    // PREMIUM
+  status     String    // active, cancelled, expired
+  startDate  DateTime
+  endDate    DateTime
+  cancelledAt DateTime?
+  paymentId  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  // Relations
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment    Payment?  @relation(fields: [paymentId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([plan])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+// Payment records
+model Payment {
+  id           String         @id @default(uuid())
+  userId       String
+  amount       Float
+  currency     String
+  reference    String         @unique
+  status       String         // pending, success, failed
+  provider     String         // paystack, etc.
+  metadata     Json           @default("{}")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Relations
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription[]
+
+  @@index([userId])
+  @@index([reference])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// API usage tracking
+model ApiUsage {
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String   // GEMINI, OPENAI, CLAUDE
+  prompt       String   @db.Text
+  responseTime Int      // in milliseconds
+  status       String   // success, error
+  parameters   Json     @default("{}")
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// API keys for external access
+model ApiKey {
+  id        String    @id @default(uuid())
+  name      String
+  key       String    @unique
+  userId    String
+  lastUsed  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+}
