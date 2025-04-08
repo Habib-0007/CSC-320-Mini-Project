@@ -175,7 +175,7 @@ export const getUserUsage = async (req: any, res: Response): Promise<any> => {
     });
 
     const dailyUsage: Record<string, number> = {};
-    apiUsage.forEach((usage) => {
+    apiUsage.forEach((usage: any) => {
       const date = usage.createdAt.toISOString().split("T")[0];
       dailyUsage[date] = (dailyUsage[date] || 0) + 1;
     });
@@ -190,7 +190,7 @@ export const getUserUsage = async (req: any, res: Response): Promise<any> => {
       },
     });
 
-    const providerUsage = providerStats.map((stat) => ({
+    const providerUsage = providerStats.map((stat: any) => ({
       provider: stat.provider,
       count: stat._count.id,
     }));

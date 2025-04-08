@@ -262,7 +262,7 @@ export const getTotalUsage = async (
     });
 
     const dailyUsage: Record<string, number> = {};
-    apiUsage.forEach((usage) => {
+    apiUsage.forEach((usage: any) => {
       const date = usage.createdAt.toISOString().split("T")[0];
       dailyUsage[date] = (dailyUsage[date] || 0) + 1;
     });
@@ -274,7 +274,7 @@ export const getTotalUsage = async (
       },
     });
 
-    const providerUsage = providerStats.map((stat) => ({
+    const providerUsage = providerStats.map((stat: any) => ({
       provider: stat.provider,
       count: stat._count.id,
     }));
@@ -367,7 +367,7 @@ export const getUserUsage = async (
     });
 
     const dailyUsage: Record<string, number> = {};
-    apiUsage.forEach((usage) => {
+    apiUsage.forEach((usage: any) => {
       const date = usage.createdAt.toISOString().split("T")[0];
       dailyUsage[date] = (dailyUsage[date] || 0) + 1;
     });
@@ -382,7 +382,7 @@ export const getUserUsage = async (
       },
     });
 
-    const providerUsage = providerStats.map((stat) => ({
+    const providerUsage = providerStats.map((stat: any) => ({
       provider: stat.provider,
       count: stat._count.id,
     }));
@@ -433,13 +433,13 @@ export const getLLMStatistics = async (
       },
     });
 
-    const providers = providerStats.map((stat) => {
+    const providers = providerStats.map((stat: any) => {
       const totalCalls = stat._count.id;
       const errors = errorStats
         .filter(
-          (err) => err.provider === stat.provider && err.status !== "success"
+          (err: any) => err.provider === stat.provider && err.status !== "success"
         )
-        .reduce((total, err) => total + err._count.id, 0);
+        .reduce((total: any, err: any) => total + err._count.id, 0);
 
       return {
         provider: stat.provider,
