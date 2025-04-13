@@ -2,6 +2,7 @@ import express from "express";
 import { validate, authSchemas } from "../utils/validation";
 import {
   forgotPassword,
+  getMe,
   githubAuth,
   githubCallback,
   googleAuth,
@@ -36,6 +37,8 @@ router.get("/github", githubAuth);
 router.get("/github/callback", githubCallback);
 router.get("/google", googleAuth);
 router.get("/google/callback", googleCallback);
+
+router.get('/me', getMe);
 
 // Protected routes
 router.post("/logout", authenticateToken as any, logout);

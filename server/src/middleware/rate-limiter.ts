@@ -66,7 +66,7 @@ const llmLimiter = (req: any, res: any, next: any) => {
 };
 
 export const setupRateLimiter = (app: Express) => {
-  app.use("/api/auth", authLimiter);
+  // app.use("/api/auth", authLimiter);
 
-  app.use("/api/llm", authenticateToken as any, llmLimiter);
+  // app.use("/api/llm", authenticateToken as any, llmLimiter);
 };

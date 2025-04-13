@@ -21,7 +21,7 @@ import "prismjs/components/prism-json";
 import "prismjs/components/prism-markdown";
 import "prismjs/components/prism-yaml";
 import "prismjs/components/prism-sql";
-import "prismjs/components/prism-php";
+// import "prismjs/components/prism-php";
 import "prismjs/components/prism-ruby";
 import "prismjs/components/prism-swift";
 import "prismjs/components/prism-kotlin";

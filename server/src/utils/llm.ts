@@ -1,5 +1,6 @@
 import axios from "axios";
 import { LLMProvider, LLMRequest, LLMResponse } from "../types";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const handleLLMResponse = (data: any, provider: LLMProvider): LLMResponse => {
   switch (provider) {
@@ -15,7 +16,7 @@ const handleLLMResponse = (data: any, provider: LLMProvider): LLMResponse => {
 };
 
 const parseGeminiResponse = (data: any): LLMResponse => {
-  const response = data.candidates[0].content.parts[0].text;
+  const response = data;
 
   const codeBlockRegex = /```([a-zA-Z0-9_+-]+)?\n([\s\S]*?)\n```/g;
   let match = codeBlockRegex.exec(response);
@@ -94,6 +95,9 @@ export const generateWithGemini = async (
 ): Promise<LLMResponse> => {
   try {
     const { prompt, parameters } = request;
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    // Use "gemini-pro" model instead of "gemini-1.0-pro"
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     let enhancedPrompt = prompt;
     if (request.language) {
@@ -103,28 +107,29 @@ export const generateWithGemini = async (
       enhancedPrompt += `\n\nUse the ${request.framework} framework.`;
     }
 
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: enhancedPrompt,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: parameters?.temperature || 0.7,
-          topK: parameters?.topK || 40,
-          topP: parameters?.topP || 0.95,
-          maxOutputTokens: parameters?.maxTokens || 8192,
-        },
-      }
-    );
+    const generationConfig = {
+      temperature: parameters?.temperature || 0.7,
+      topK: parameters?.topK || 40,
+      topP: parameters?.topP || 0.95,
+      maxOutputTokens: parameters?.maxTokens || 8192,
+    };
 
-    return handleLLMResponse(response.data, LLMProvider.GEMINI);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: enhancedPrompt }] }],
+      generationConfig,
+    });
+
+    if (!result.response) {
+      throw new Error("Invalid response from Gemini API");
+    }
+
+    const responseText = result.response.text();
+
+    if (!responseText || responseText.length === 0) {
+      throw new Error("No text found in Gemini API response");
+    }
+
+    return handleLLMResponse(responseText, LLMProvider.GEMINI);
   } catch (error) {
     console.error("Error generating with Gemini:", error);
     throw error;

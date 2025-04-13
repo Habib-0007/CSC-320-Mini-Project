@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/db";
 import { sendEmail, emailTemplates } from "../config/email";
 import {
@@ -373,6 +373,30 @@ export const resetPassword = async (
       status: 500,
     });
   }
+};
+
+export const getMe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user) {
+    return next(new Error("User not authenticated"));
+  }
+
+  const user = req.user;
+
+  res.status(200).json({
+    message: "User retrieved successfully",
+    status: 200,
+    success: true,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      plan: user.plan,
+    },
+  });
 };
 
 export const githubAuth = (req: Request, res: Response): any => {

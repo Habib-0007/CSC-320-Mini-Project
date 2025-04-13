@@ -50,7 +50,7 @@ export const authAPI = {
   logout: () => api.post("/auth/logout"),
 
   // Ensure this function is properly implemented
-  getCurrentUser: () => api.get("/auth/me"),
+  getCurrentUser: () => api.get("/users/me"),
 }
 
 // User API
